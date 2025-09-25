@@ -1,5 +1,5 @@
 // Імпортуємо іменований експорт ContactModel
-import { ContactModel } from '../models/contact.js';
+import { ContactModel } from '../db/models/contact.js';
 
 // Отримати всі контакти
 export const getAllContacts = async () => {
