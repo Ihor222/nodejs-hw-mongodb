@@ -27,31 +27,31 @@ export async function createContact(payload) {
 };
 
 // Оновлює існуючий контакт
-export async function modifyContact(id, data, extraOptions = {}) {
-  try {
-    const result = await ContactModel.findOneAndUpdate(
-      { _id: id },
-      data,
-      { new: true, ...extraOptions }
+export async function updateContact(contactId, payload, options = {}) {
+    const rawResult = await ContactModel.findOneAndUpdate(
+        { _id: contactId },
+        payload,
+        {
+            new: true,
+            includeResultMetadata: true,
+            ...options,
+        },
     );
 
-    if (!result) return null;
+    if (!rawResult || !rawResult.value)
+        return null;
 
     return {
-      updated: result,
-      isUpsert: Boolean(result?._id && extraOptions.upsert),
+        contact: rawResult.value,
+        isNew: Boolean(rawResult?.lastErrorObject?.upserted),
     };
-  } catch (err) {
-    throw new Error("Не вдалося оновити контакт: " + err.message);
-  }
-}
+};
 
 // Видаляє контакт за ID
-export async function removeContact(id) {
-  try {
-    const deleted = await ContactModel.findOneAndDelete({ _id: id });
-    return deleted;
-  } catch (err) {
-    throw new Error("Не вдалося видалити контакт: " + err.message);
-  }
-}
+export async function deleteContact(contactId) {
+    const contact = await ContactModel.findOneAndDelete({
+        _id: contactId,
+    });
+
+    return contact;
+  };
