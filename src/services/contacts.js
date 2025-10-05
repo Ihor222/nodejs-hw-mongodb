@@ -21,14 +21,10 @@ export async function fetchContactById(id) {
 }
 
 // Створює новий контакт
-export async function addContact(data) {
-  try {
-    const newContact = await ContactModel.create(data);
-    return newContact;
-  } catch (err) {
-    throw new Error("Не вдалося створити контакт: " + err.message);
-  }
-}
+export async function createContact(payload) {
+    const contact = await ContactModel.create(payload)
+    return contact;
+};
 
 // Оновлює існуючий контакт
 export async function modifyContact(id, data, extraOptions = {}) {
