@@ -1,28 +1,22 @@
 import { Router } from "express";
 import {
-    fetchAllContacts,
-    fetchContactById,
-    addNewContact,
-    modifyContact,
-    removeContact
+    getAllContactsController, getContactByIdController,
+    createContactController, deleteContactController, patchContactController
 } from "../controllers/contacts.js";
 import ctrlWrapper from "../utils/ctrlWrapper.js";
 
-const contactsRouter = Router();
 
-// Повертає всі контакти
-contactsRouter.get("/", ctrlWrapper(fetchAllContacts));
+const router = Router();
 
-// Повертає контакт по ID
-contactsRouter.get("/:contactId", ctrlWrapper(fetchContactById));
+router.get("/contacts", ctrlWrapper(getAllContactsController));
 
-// Додає новий контакт
-contactsRouter.post("/", ctrlWrapper(addNewContact));
+router.get("/contacts/:contactId", ctrlWrapper(getContactByIdController));
 
-// Часткове оновлення контакту
-contactsRouter.patch("/:contactId", ctrlWrapper(modifyContact));
+router.post("/contacts", ctrlWrapper(createContactController));
 
-// Видаляє контакт
-contactsRouter.delete("/:contactId", ctrlWrapper(removeContact));
+router.patch("/contacts/:contactId", ctrlWrapper(patchContactController));
 
-export default contactsRouter;
+router.delete("/contacts/:contactId", ctrlWrapper(deleteContactController));
+
+
+export default router;
