@@ -1,7 +1,7 @@
 import { ContactModel } from "../db/models/contact.js";
 
 // Повертає список усіх контактів
-export async function fetchAllContacts() {
+export async function getAllContacts() {
   try {
     const allContacts = await ContactModel.find();
     return allContacts;
@@ -11,7 +11,7 @@ export async function fetchAllContacts() {
 }
 
 // Повертає контакт за його ID
-export async function fetchContactById(id) {
+export async function getContactById(id) {
   try {
     const contact = await ContactModel.findById(id);
     return contact || null;
