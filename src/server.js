@@ -3,77 +3,44 @@ import cors from "cors";
 import pino from "pino";
 import pinoHttp from "pino-http";
 import getEnvVar from "./utils/getEnvVar.js";
-import { getAllContacts, getContactById } from "./services/contacts.js";
+import contactsRouter from "./routers/contacts.js";
+import errorHandler from "./middlewares/errorHandler.js";
+import notFoundHandler from "./middlewares/notFoundHandler.js";
 
-const PORT = Number(getEnvVar("PORT") || 8080);
+const PORT = Number(getEnvVar("PORT", 8080));
 
-export default function setupServer() {
+export default function startServer() {
     const app = express();
 
-    // Middleware
+    // Body parser
     app.use(express.json());
+
+    // Enable CORS
     app.use(cors());
 
-    // Logger
+    // Logger setup
     const logger = pino({
         transport: { target: "pino-pretty", options: { colorize: true } }
     });
     app.use(pinoHttp({ logger }));
 
-    // Root route
+    // Health check endpoint
     app.get("/", (req, res) => {
-        res.status(200).json({ message: "API is running" });
+        res.status(200).json({ message: "Server is up and running" });
     });
 
-    // Get all contacts
-    app.get("/contacts", async (req, res, next) => {
-        try {
-            const contacts = await getAllContacts();
-            res.status(200).json({
-                status: 200,
-                message: "Successfully found contacts!",
-                data: contacts,
-            });
-        } catch (err) {
-            next(err);
-        }
-    });
+    // Contacts API routes
+    app.use("/contacts", contactsRouter);
 
-    app.get("/contacts/:contactId", async (req, res, next) => {
-        try {
-            const { contactId } = req.params;
-            const contact = await getContactById(contactId);
+    // 404 handler for unmatched routes
+    app.use(notFoundHandler);
 
-            if (!contact) {
-                return res.status(404).json({ message: "Contact not found" });
-            }
+    // Centralized error handler
+    app.use(errorHandler);
 
-            res.status(200).json({
-                status: 200,
-                message: `Successfully found contact with id ${contactId}!`,
-                data: contact,
-            });
-        } catch (err) {
-            next(err);
-        }
-    });
-
-    // 404 handler
-    app.use((req, res) => {
-        res.status(404).json({ message: "Not Found" });
-    });
-
-    // Global error handler
-    app.use((err, req, res, next) => {
-        res.status(500).json({
-            message: "Something went wrong",
-            error: err.message,
-        });
-    });
-
-    // Start server
+    // Start listening
     app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
+        console.log(`Application listening on port ${PORT}`);
     });
 
     return app;
