@@ -39,7 +39,6 @@ export default function setupServer() {
         }
     });
 
-    // Get contact by id
     app.get("/contacts/:contactId", async (req, res, next) => {
         try {
             const { contactId } = req.params;
