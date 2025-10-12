@@ -12,7 +12,7 @@ import { isValidId } from "../middlewares/isValidId.js";
 import {
   createContactSchema,
   updateContactSchema,
-} from "../validation/contactSchemas.js";
+} from "../validation/contacts.js";
 
 const router = Router();
 
