@@ -7,16 +7,34 @@ import {
   updateContact,
 } from "../services/contacts.js";
 
-// Отримати всі контакти
+// Отримати всі контакти (з пагінацією)
+// Отримати всі контакти (з пагінацією, фільтром та сортуванням)
 export async function getAllContactsController(req, res) {
-  const contacts = await getAllContacts();
+  try {
+    // Query параметри
+    const page = Number(req.query.page) || 1;
+    const perPage = Number(req.query.perPage) || 10;
+    const sortBy = req.query.sortBy || "name";         // за якою властивістю сортувати
+    const sortOrder = req.query.sortOrder || "asc";    // asc або desc
 
-  res.json({
-    status: 200,
-    message: "Successfully found contacts!",
-    data: contacts,
-  });
+    // Опціональні фільтри
+    const filter = {};
+    if (req.query.contactType) filter.contactType = req.query.contactType.split(",");
+    if (req.query.isFavourite) filter.isFavourite = req.query.isFavourite === "true";
+
+    // Викликаємо сервіс
+    const paginationData = await getAllContacts({ page, perPage, sortBy, sortOrder, filter });
+
+    res.json({
+      status: 200,
+      message: "Successfully found contacts!",
+      data: paginationData,
+    });
+  } catch (err) {
+    res.status(500).json({ status: 500, message: err.message });
+  }
 }
+
 
 // Отримати контакт за ID
 export async function getContactByIdController(req, res) {
