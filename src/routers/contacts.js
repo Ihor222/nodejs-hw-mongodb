@@ -13,8 +13,12 @@ import {
   createContactSchema,
   updateContactSchema,
 } from "../validation/contacts.js";
+import { authenticate } from "../middlewares/authenticate.js";
 
 const router = Router();
+
+// Підключаємо middleware автентифікації до всіх роутів
+router.use(authenticate);
 
 router.get("/", ctrlWrapper(getAllContactsController));
 
@@ -28,6 +32,7 @@ router.patch(
   validateBody(updateContactSchema),
   ctrlWrapper(patchContactController)
 );
+
 router.delete("/:contactId", isValidId, ctrlWrapper(deleteContactController));
 
 export default router;
