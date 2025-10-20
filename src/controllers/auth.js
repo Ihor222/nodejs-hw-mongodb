@@ -4,7 +4,6 @@ import {
   sendResetEmail, resetPassword
 } from "../services/auth.js";
 
-// ------------------ REGISTER ------------------ //
 export async function registerUserController(req, res) {
   const user = await registerUser(req.body);
 
@@ -15,7 +14,6 @@ export async function registerUserController(req, res) {
   });
 }
 
-// ------------------ LOGIN ------------------ //
 export async function loginUserController(req, res) {
   const session = await loginUser(req.body);
 
@@ -39,7 +37,6 @@ export async function loginUserController(req, res) {
   });
 }
 
-// ------------------ REFRESH ------------------ //
 const setupSessionCookies = (res, session) => {
   res.cookie("refreshToken", session.refreshToken, {
     httpOnly: true,
@@ -70,7 +67,6 @@ export async function refreshUserSessionController(req, res) {
   });
 }
 
-// ------------------ LOGOUT ------------------ //
 export async function logoutUserController(req, res) {
   if (req.cookies.sessionId) {
     await logoutUser(req.cookies.sessionId);
@@ -82,7 +78,6 @@ export async function logoutUserController(req, res) {
   res.status(204).send();
 }
 
-// ------------------ SEND RESET EMAIL CONTROLLER ------------------ //
 export async function sendResetEmailController(req, res) {
   await sendResetEmail(req.body.email);
 
@@ -109,6 +104,5 @@ export {
   loginUserController as loginController,
   refreshUserSessionController as refreshController,
   logoutUserController as logoutController,
-  sendResetEmailController,
-  resetPasswordController,
+  sendResetEmailController
 };
