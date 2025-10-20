@@ -104,5 +104,4 @@ export {
   loginUserController as loginController,
   refreshUserSessionController as refreshController,
   logoutUserController as logoutController,
-  sendResetEmailController
 };
