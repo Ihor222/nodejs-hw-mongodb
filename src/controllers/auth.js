@@ -105,7 +105,6 @@ export async function resetPasswordController(req, res) {
   });
 }
 
-// ------------------ EXPORTS ------------------ //
 export {
   registerUserController as registerController,
   loginUserController as loginController,
