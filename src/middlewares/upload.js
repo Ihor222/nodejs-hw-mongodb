@@ -5,7 +5,7 @@ import cloudinary from "../utils/cloudinary.js";
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: "contacts_photos", // папка на Cloudinary
+    folder: "contacts_photos",
     allowed_formats: ["jpg", "jpeg", "png"],
     transformation: [{ width: 500, height: 500, crop: "limit" }],
   },

@@ -15,15 +15,16 @@ import {
 } from "../validation/contacts.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { upload } from "../middlewares/upload.js"; // multer middleware
-import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 
 const router = Router();
 
 // Підключаємо middleware автентифікації до всіх роутів
 router.use(authenticate);
 
+// Отримати всі контакти
 router.get("/", ctrlWrapper(getAllContactsController));
 
+// Отримати контакт за ID
 router.get("/:contactId", isValidId, ctrlWrapper(getContactByIdController));
 
 // Створення контакту з можливістю завантажити фото
@@ -31,13 +32,7 @@ router.post(
   "/",
   upload.single("photo"), // multer обробляє multipart/form-data
   validateBody(createContactSchema),
-  ctrlWrapper(async (req, res) => {
-    if (req.file) {
-      const result = await uploadToCloudinary(req.file.path);
-      req.body.photo = result.secure_url;
-    }
-    return createContactController(req, res);
-  })
+  ctrlWrapper(createContactController)
 );
 
 // Оновлення контакту з можливістю завантажити фото
@@ -46,15 +41,10 @@ router.patch(
   isValidId,
   upload.single("photo"),
   validateBody(updateContactSchema),
-  ctrlWrapper(async (req, res) => {
-    if (req.file) {
-      const result = await uploadToCloudinary(req.file.path);
-      req.body.photo = result.secure_url;
-    }
-    return patchContactController(req, res);
-  })
+  ctrlWrapper(patchContactController)
 );
 
+// Видалення контакту
 router.delete("/:contactId", isValidId, ctrlWrapper(deleteContactController));
 
 export default router;
