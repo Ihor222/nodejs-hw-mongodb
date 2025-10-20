@@ -14,7 +14,7 @@ import {
   updateContactSchema,
 } from "../validation/contacts.js";
 import { authenticate } from "../middlewares/authenticate.js";
-import { upload } from "../utils/upload.js"; // <--- додано для роботи з photo
+import { upload } from "../utils/uploadToCloudinary.js"; // <--- додано для роботи з photo
 
 const router = Router();
 
