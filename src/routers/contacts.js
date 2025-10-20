@@ -35,7 +35,6 @@ router.post(
   ctrlWrapper(createContactController)
 );
 
-// Оновлення контакту з можливістю завантажити фото
 router.patch(
   "/:contactId",
   isValidId,
@@ -44,7 +43,6 @@ router.patch(
   ctrlWrapper(patchContactController)
 );
 
-// Видалення контакту
 router.delete("/:contactId", isValidId, ctrlWrapper(deleteContactController));
 
 export default router;
