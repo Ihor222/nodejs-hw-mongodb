@@ -79,3 +79,9 @@ export async function logoutUserController(req, res) {
 
     res.status(204).send(); // Без тіла відповіді
 };
+export {
+  registerUserController as registerController,
+  loginUserController as loginController,
+  refreshUserSessionController as refreshController,
+  logoutUserController as logoutController,
+};
