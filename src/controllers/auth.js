@@ -93,7 +93,6 @@ export async function sendResetEmailController(req, res) {
   });
 }
 
-// ------------------ RESET PASSWORD CONTROLLER ------------------ //
 export async function resetPasswordController(req, res) {
   const { token, password } = req.body;
   await resetPassword({ token, password });
