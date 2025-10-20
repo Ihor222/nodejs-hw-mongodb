@@ -8,6 +8,7 @@ const normalizeContactType = (type) => {
 const normalizeFavourite = (favourite) => {
   if (typeof favourite !== "string") return undefined;
 
+  // можна залишити як рядок, або перетворити в булеве значення
   return favourite.toLowerCase() === "true" ? true : favourite.toLowerCase() === "false" ? false : undefined;
 };
 

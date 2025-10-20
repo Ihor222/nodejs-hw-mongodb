@@ -14,6 +14,7 @@ import {
   updateContactSchema,
 } from "../validation/contacts.js";
 import { authenticate } from "../middlewares/authenticate.js";
+import { upload } from "../utils/upload.js"; // <--- додано для роботи з photo
 
 const router = Router();
 
@@ -24,11 +25,19 @@ router.get("/", ctrlWrapper(getAllContactsController));
 
 router.get("/:contactId", isValidId, ctrlWrapper(getContactByIdController));
 
-router.post("/", validateBody(createContactSchema), ctrlWrapper(createContactController));
+// Створення контакту з можливістю завантажити фото
+router.post(
+  "/",
+  upload.single("photo"), // <--- підтримка multipart/form-data
+  validateBody(createContactSchema),
+  ctrlWrapper(createContactController)
+);
 
+// Оновлення контакту з можливістю завантажити фото
 router.patch(
   "/:contactId",
   isValidId,
+  upload.single("photo"), // <--- підтримка multipart/form-data
   validateBody(updateContactSchema),
   ctrlWrapper(patchContactController)
 );

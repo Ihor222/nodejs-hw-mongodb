@@ -1,31 +1,18 @@
 import { ContactModel } from "../db/models/contact.js";
 import { calculatePaginationData } from "../utils/calculatePaginationData.js";
+import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
+import fs from "fs/promises";
 
 // Отримати всі контакти з пагінацією, фільтром та сортуванням
-export async function getAllContacts({
-  page = 1,
-  perPage = 10,
-  sortBy = "name",
-  sortOrder = "asc",
-  filter = {}
-}) {
+export async function getAllContacts({ page = 1, perPage = 10, sortBy = "name", sortOrder = "asc", filter = {} }) {
   const limit = perPage;
   const skip = (page - 1) * perPage;
 
-  // Створюємо запит
   const contactsQuery = ContactModel.find();
 
-  // Фільтр за типом контакту
-  if (filter.contactType) {
-    contactsQuery.where("contactType").in(filter.contactType);
-  }
+  if (filter.contactType) contactsQuery.where("contactType").in(filter.contactType);
+  if (filter.isFavourite !== undefined) contactsQuery.where("isFavourite").equals(filter.isFavourite);
 
-  // Фільтр за улюбленими контактами
-  if (filter.isFavourite !== undefined) {
-    contactsQuery.where("isFavourite").equals(filter.isFavourite);
-  }
-
-  // Виконуємо запит і рахуємо загальну кількість елементів
   const [totalItems, contacts] = await Promise.all([
     ContactModel.find().merge(contactsQuery).countDocuments(),
     contactsQuery.skip(skip).limit(limit).sort({ [sortBy]: sortOrder }).exec()
@@ -33,10 +20,7 @@ export async function getAllContacts({
 
   const paginationData = calculatePaginationData(totalItems, perPage, page);
 
-  return {
-    data: contacts,
-    ...paginationData
-  };
+  return { data: contacts, ...paginationData };
 }
 
 // Отримати контакт за ID
@@ -45,14 +29,26 @@ export async function getContactById(contactId) {
   return contact || null;
 }
 
-// Створити новий контакт
-export async function createContact(payload) {
+// Створити новий контакт (підтримка фото)
+export async function createContact(payload, file) {
+  if (file) {
+    const photoUrl = await uploadToCloudinary(file.path);
+    payload.photo = photoUrl;
+    await fs.unlink(file.path); // Видаляємо тимчасовий файл
+  }
+
   const contact = await ContactModel.create(payload);
   return contact;
 }
 
-// Оновити контакт
-export async function updateContact(contactId, payload, options = {}) {
+// Оновити контакт (підтримка фото)
+export async function updateContact(contactId, payload, file, options = {}) {
+  if (file) {
+    const photoUrl = await uploadToCloudinary(file.path);
+    payload.photo = photoUrl;
+    await fs.unlink(file.path);
+  }
+
   const rawResult = await ContactModel.findOneAndUpdate(
     { _id: contactId },
     payload,

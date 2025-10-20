@@ -20,7 +20,7 @@ export async function getAllContactsController(req, res) {
     if (req.query.isFavourite) filter.isFavourite = req.query.isFavourite === "true";
 
     const paginationData = await getAllContacts({
-      userId: req.user._id, // Враховуємо користувача
+      userId: req.user._id,
       page,
       perPage,
       sortBy,
@@ -42,7 +42,7 @@ export async function getAllContactsController(req, res) {
 export async function getContactByIdController(req, res, next) {
   try {
     const { contactId } = req.params;
-    const contact = await getContactById(contactId, req.user._id); // враховуємо userId
+    const contact = await getContactById(contactId, req.user._id);
 
     if (!contact) {
       throw createHttpError(404, "Contact not found");
@@ -61,10 +61,13 @@ export async function getContactByIdController(req, res, next) {
 // Створити новий контакт
 export async function createContactController(req, res, next) {
   try {
-    const contact = await createContact({
-      ...req.body,
-      userId: req.user._id, // додаємо userId
-    });
+    const contact = await createContact(
+      {
+        ...req.body,
+        userId: req.user._id,
+      },
+      req.file // передаємо файл для завантаження на Cloudinary
+    );
 
     res.status(201).json({
       status: 201,
@@ -80,7 +83,12 @@ export async function createContactController(req, res, next) {
 export async function patchContactController(req, res, next) {
   try {
     const { contactId } = req.params;
-    const updatedContact = await updateContact(contactId, req.body, req.user._id); // враховуємо userId
+    const updatedContact = await updateContact(
+      contactId,
+      req.body,
+      req.file, // передаємо файл для оновлення фото
+      { userId: req.user._id }
+    );
 
     if (!updatedContact) {
       throw createHttpError(404, "Contact not found");
@@ -100,7 +108,7 @@ export async function patchContactController(req, res, next) {
 export async function deleteContactController(req, res, next) {
   try {
     const { contactId } = req.params;
-    const deletedContact = await deleteContact(contactId, req.user._id); // враховуємо userId
+    const deletedContact = await deleteContact(contactId, req.user._id);
 
     if (!deletedContact) {
       throw createHttpError(404, "Contact not found");
