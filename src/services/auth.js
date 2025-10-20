@@ -1,5 +1,5 @@
 import { User } from "../db/models/user.js";
-import { Session } from "../db/models/session.js";
+import { SessionModel } from "../db/models/session.js";
 import bcrypt from "bcrypt";
 import createHttpError from "http-errors";
 import { randomBytes } from "crypto";
@@ -32,10 +32,10 @@ export async function loginUser({ email, password }) {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw createHttpError(401, "Invalid email or password");
 
-  await Session.deleteOne({ userId: user._id });
+  await SessionModel.deleteOne({ userId: user._id });
 
   const sessionData = createSession();
-  const session = await Session.create({
+  const session = await SessionModel.create({
     userId: user._id,
     ...sessionData,
   });
@@ -58,16 +58,16 @@ const createSession = () => {
 
 // ------------------ REFRESH SESSION ------------------ //
 export async function refreshUserSession({ sessionId, refreshToken }) {
-  const session = await Session.findOne({ _id: sessionId, refreshToken });
+  const session = await SessionModel.findOne({ _id: sessionId, refreshToken });
   if (!session) throw createHttpError(401, "Session not found");
 
   const isExpired = new Date() > new Date(session.refreshTokenValidUntil);
   if (isExpired) throw createHttpError(401, "Session token expired");
 
-  await Session.deleteOne({ _id: sessionId, refreshToken });
+  await SessionModel.deleteOne({ _id: sessionId, refreshToken });
 
   const newSessionData = createSession();
-  const newSession = await Session.create({
+  const newSession = await SessionModel.create({
     userId: session.userId,
     ...newSessionData,
   });
@@ -77,7 +77,7 @@ export async function refreshUserSession({ sessionId, refreshToken }) {
 
 // ------------------ LOGOUT ------------------ //
 export async function logoutUser(sessionId) {
-  await Session.deleteOne({ _id: sessionId });
+  await SessionModel.deleteOne({ _id: sessionId });
 }
 
 // ------------------ SEND RESET EMAIL ------------------ //
@@ -120,5 +120,5 @@ export async function resetPassword({ token, password }) {
   user.password = hashedPassword;
   await user.save();
 
-  await Session.deleteMany({ userId: user._id });
+  await SessionModel.deleteMany({ userId: user._id });
 }
