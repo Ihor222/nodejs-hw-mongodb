@@ -1,4 +1,4 @@
-import { User } from "../db/models/user.js";
+import { UserModel } from "../db/models/user.js";
 import { SessionModel } from "../db/models/session.js";
 import bcrypt from "bcrypt";
 import createHttpError from "http-errors";
@@ -10,11 +10,11 @@ import { sendMail } from "../utils/sendMail.js";
 
 // ------------------ REGISTER ------------------ //
 export async function registerUser(payload) {
-  const existingUser = await User.findOne({ email: payload.email });
+  const existingUser = await UserModel.findOne({ email: payload.email });
   if (existingUser) throw createHttpError(409, "Email in use");
 
   const hashedPassword = await bcrypt.hash(payload.password, 10);
-  const user = await User.create({
+  const user = await UserModel.create({
     ...payload,
     password: hashedPassword,
   });
@@ -26,7 +26,7 @@ export async function registerUser(payload) {
 
 // ------------------ LOGIN ------------------ //
 export async function loginUser({ email, password }) {
-  const user = await User.findOne({ email });
+  const user = await UserModel.findOne({ email });
   if (!user) throw createHttpError(401, "Invalid email or password");
 
   const isMatch = await bcrypt.compare(password, user.password);
@@ -82,7 +82,7 @@ export async function logoutUser(sessionId) {
 
 // ------------------ SEND RESET EMAIL ------------------ //
 export async function sendResetEmail(email) {
-  const user = await User.findOne({ email });
+  const user = await UserModel.findOne({ email });
   if (!user) throw createHttpError(404, "User not found!");
 
   const token = jwt.sign(
@@ -113,7 +113,7 @@ export async function resetPassword({ token, password }) {
     throw createHttpError(401, "Token is expired or invalid.");
   }
 
-  const user = await User.findOne({ email: payload.email });
+  const user = await UserModel.findOne({ email: payload.email });
   if (!user) throw createHttpError(404, "User not found!");
 
   const hashedPassword = await bcrypt.hash(password, 10);
