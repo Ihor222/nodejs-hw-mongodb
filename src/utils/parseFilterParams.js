@@ -8,10 +8,14 @@ const normalizeContactType = (type) => {
 const normalizeFavourite = (favourite) => {
   if (typeof favourite !== "string") return undefined;
 
-  return favourite.toLowerCase() === "true" ? true : favourite.toLowerCase() === "false" ? false : undefined;
+  return favourite.toLowerCase() === "true"
+    ? true
+    : favourite.toLowerCase() === "false"
+    ? false
+    : undefined;
 };
 
-export const getFilterOptions = (query) => {
+export const parseFilterParams = (query) => {
   const { contactType, isFavourite } = query;
 
   const typeFilter = normalizeContactType(contactType);
