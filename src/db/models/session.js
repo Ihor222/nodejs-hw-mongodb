@@ -25,7 +25,7 @@ const sessionSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // створює createdAt та updatedAt
+    timestamps: true,
   }
 );
 

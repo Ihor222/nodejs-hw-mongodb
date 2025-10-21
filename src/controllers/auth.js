@@ -1,87 +1,81 @@
 import { THIRTY_DAY } from "../constants/index.js";
 import { registerUser, loginUser, logoutUser, refreshUserSession } from "../services/auth.js";
 
-// Контролер реєстрації користувача
+// Реєстрація користувача
 export async function registerUserController(req, res) {
     const user = await registerUser(req.body);
 
     res.status(201).json({
         status: 201,
         message: "Successfully registered a user!",
-        data: user, // без пароля
+        data: user,
     });
-};
+}
 
-// Контролер логіну користувача
+// Логін користувача
 export async function loginUserController(req, res) {
     const session = await loginUser(req.body);
 
     res.cookie("refreshToken", session.refreshToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "None",
         expires: new Date(Date.now() + THIRTY_DAY),
     });
-    res.cookie("sessionId", session._id, {
+
+    // Використовуємо _id сесії замість sessionId
+    res.cookie("sessionId", session._id.toString(), {
         httpOnly: true,
-        secure: true,
-        sameSite: "None",
         expires: new Date(Date.now() + THIRTY_DAY),
     });
 
-    res.status(200).json({
+    res.json({
         status: 200,
-        message: "Successfully logged in an user!",
-        data: { accessToken: session.accessToken },
+        message: "Successfully logged in a user!",
+        data: {
+            accessToken: session.accessToken,
+        },
     });
-};
+}
 
-// Допоміжна функція для встановлення cookies сесії
-const setupSessionCookies = (res, session) => {
+// Допоміжна функція для встановлення cookies
+const setupSession = (res, session) => {
     res.cookie("refreshToken", session.refreshToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "None",
         expires: new Date(Date.now() + THIRTY_DAY),
     });
-    res.cookie("sessionId", session._id, {
+    res.cookie("sessionId", session._id.toString(), {
         httpOnly: true,
-        secure: true,
-        sameSite: "None",
         expires: new Date(Date.now() + THIRTY_DAY),
     });
-};
+}
 
-// Контролер оновлення сесії (refresh)
+// Оновлення сесії
 export async function refreshUserSessionController(req, res) {
     const session = await refreshUserSession({
-        sessionId: req.cookies.sessionId,
+        sessionId: req.cookies.sessionId, // беремо _id сесії з cookies
         refreshToken: req.cookies.refreshToken,
     });
 
-    setupSessionCookies(res, session);
+    setupSession(res, session);
 
-    res.status(200).json({
+    res.json({
         status: 200,
         message: "Successfully refreshed a session!",
-        data: { accessToken: session.accessToken },
+        data: {
+            accessToken: session.accessToken,
+        },
     });
-};
+}
 
-// Контролер логауту
+// Вихід користувача
 export async function logoutUserController(req, res) {
-    if (req.cookies.sessionId) {
-        await logoutUser(req.cookies.sessionId);
+    const sessionId = req.cookies.sessionId;
+
+    if (sessionId) {
+        await logoutUser(sessionId); // видаляємо сесію по _id
     }
 
     res.clearCookie("sessionId");
     res.clearCookie("refreshToken");
 
-    res.status(204).send(); // Без тіла відповіді
-};
-export {
-  registerUserController as registerController,
-  loginUserController as loginController,
-  refreshUserSessionController as refreshController,
-  logoutUserController as logoutController,
-};
+    res.status(204).send();
+}

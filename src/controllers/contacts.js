@@ -1,113 +1,91 @@
 import createHttpError from "http-errors";
-import {
-  getAllContacts,
-  getContactById,
-  createContact,
-  deleteContact,
-  updateContact,
-} from "../services/contacts.js";
+import { getAllContacts, getContactById, createContact, deleteContact, updateContact } from "../services/contacts.js";
+import { parsePaginationParams } from "../utils/parsePaginationParams.js";
+import { parseSortParams } from "../utils/parseSortParams.js";
+import { parseFilterParams } from "../utils/parseFilterParams.js";
 
-// Отримати всі контакти (з пагінацією, фільтром та сортуванням)
+// GET /contacts
 export async function getAllContactsController(req, res) {
-  try {
-    const page = Number(req.query.page) || 1;
-    const perPage = Number(req.query.perPage) || 10;
-    const sortBy = req.query.sortBy || "name";
-    const sortOrder = req.query.sortOrder || "asc";
+    const { page, perPage } = parsePaginationParams(req.query);
+    const { sortOrder, sortBy } = parseSortParams(req.query);
+    const filter = parseFilterParams(req.query);
 
-    const filter = {};
-    if (req.query.contactType) filter.contactType = req.query.contactType.split(",");
-    if (req.query.isFavourite) filter.isFavourite = req.query.isFavourite === "true";
-
-    const paginationData = await getAllContacts({
-      userId: req.user._id, // Враховуємо користувача
-      page,
-      perPage,
-      sortBy,
-      sortOrder,
-      filter,
+    const contacts = await getAllContacts({
+        userId: req.user._id, // тільки контакти залогіненого користувача
+        page,
+        perPage,
+        sortOrder,
+        sortBy,
+        filter,
     });
 
     res.json({
-      status: 200,
-      message: "Successfully found contacts!",
-      data: paginationData,
+        status: 200,
+        message: "Successfully found contacts!",
+        data: contacts,
     });
-  } catch (err) {
-    res.status(500).json({ status: 500, message: err.message });
-  }
 }
 
-// Отримати контакт за ID
+// GET /contacts/:contactId
 export async function getContactByIdController(req, res, next) {
-  try {
     const { contactId } = req.params;
-    const contact = await getContactById(contactId, req.user._id); // враховуємо userId
+
+    const contact = await getContactById(contactId, req.user._id); // шукаємо по _id та userId
 
     if (!contact) {
-      throw createHttpError(404, "Contact not found");
+        next(createHttpError(404, `Contact not found with id ${contactId}`));
+        return;
     }
 
     res.json({
-      status: 200,
-      message: `Successfully found contact with id ${contactId}!`,
-      data: contact,
+        status: 200,
+        message: `Successfully found contact with id ${contactId}!`,
+        data: contact,
     });
-  } catch (err) {
-    next(err);
-  }
 }
 
-// Створити новий контакт
-export async function createContactController(req, res, next) {
-  try {
+// POST /contacts
+export async function createContactController(req, res) {
     const contact = await createContact({
-      ...req.body,
-      userId: req.user._id, // додаємо userId
+        ...req.body,
+        userId: req.user._id, // додаємо userId
     });
 
     res.status(201).json({
-      status: 201,
-      message: "Successfully created a contact",
-      data: contact,
+        status: 201,
+        message: "Successfully created a contact",
+        data: contact,
     });
-  } catch (err) {
-    next(err);
-  }
 }
 
-// Оновити контакт (PATCH)
+// PATCH /contacts/:contactId
 export async function patchContactController(req, res, next) {
-  try {
     const { contactId } = req.params;
-    const updatedContact = await updateContact(contactId, req.body, req.user._id); // враховуємо userId
 
-    if (!updatedContact) {
-      throw createHttpError(404, "Contact not found");
+    const result = await updateContact(contactId, req.body, req.user._id); // оновлюємо тільки контакт користувача
+
+    if (!result) {
+        next(createHttpError(404, "Contact not found"));
+        return;
     }
 
     res.json({
-      status: 200,
-      message: "Successfully patched a contact",
-      data: updatedContact,
+        status: 200,
+        message: "Successfully patched a contact",
+        data: result,
     });
-  } catch (err) {
-    next(err);
-  }
 }
 
-// Видалити контакт
+// DELETE /contacts/:contactId
 export async function deleteContactController(req, res, next) {
-  try {
     const { contactId } = req.params;
-    const deletedContact = await deleteContact(contactId, req.user._id); // враховуємо userId
 
-    if (!deletedContact) {
-      throw createHttpError(404, "Contact not found");
+    const contact = await deleteContact(contactId, req.user._id); // видаляємо тільки свій контакт
+
+    if (!contact) {
+        next(createHttpError(404, "Contact not found"));
+        return;
     }
 
     res.status(204).send();
-  } catch (err) {
-    next(err);
-  }
 }
