@@ -5,7 +5,7 @@ const toValidNumber = (value, fallback) => {
   return Number.isFinite(num) && num > 0 ? num : fallback;
 };
 
-export const extractPaginationParams = (query) => {
+export const parsePaginationParams = (query) => {
   const { page, perPage } = query;
 
   const currentPage = toValidNumber(page, 1);
