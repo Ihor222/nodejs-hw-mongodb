@@ -10,7 +10,7 @@ const normalizeSortField = (value) => {
   return allowedFields.includes(value) ? value : "name";
 };
 
-export const extractSortParams = (query) => {
+export const parseSortParams = (query) => {
   const { sortOrder, sortBy } = query;
 
   return {
