@@ -1,8 +1,9 @@
 import { ContactModel } from "../db/models/contact.js";
 import { calculatePaginationData } from "../utils/calculatePaginationData.js";
 
-// Отримати всі контакти з пагінацією, фільтром та сортуванням
+// Отримати всі контакти користувача з пагінацією, фільтром та сортуванням
 export async function getAllContacts({
+  userId,
   page = 1,
   perPage = 10,
   sortBy = "name",
@@ -12,8 +13,8 @@ export async function getAllContacts({
   const limit = perPage;
   const skip = (page - 1) * perPage;
 
-  // Створюємо запит
-  const contactsQuery = ContactModel.find();
+  // Створюємо базовий запит — лише контакти поточного користувача
+  const contactsQuery = ContactModel.find({ userId });
 
   // Фільтр за типом контакту
   if (filter.contactType) {
@@ -25,9 +26,9 @@ export async function getAllContacts({
     contactsQuery.where("isFavourite").equals(filter.isFavourite);
   }
 
-  // Виконуємо запит і рахуємо загальну кількість елементів
+  // Підрахунок загальної кількості
   const [totalItems, contacts] = await Promise.all([
-    ContactModel.find().merge(contactsQuery).countDocuments(),
+    ContactModel.countDocuments(contactsQuery.getQuery()),
     contactsQuery.skip(skip).limit(limit).sort({ [sortBy]: sortOrder }).exec()
   ]);
 
@@ -39,9 +40,9 @@ export async function getAllContacts({
   };
 }
 
-// Отримати контакт за ID
-export async function getContactById(contactId) {
-  const contact = await ContactModel.findById(contactId);
+// Отримати контакт за ID користувача
+export async function getContactById(contactId, userId) {
+  const contact = await ContactModel.findOne({ _id: contactId, userId });
   return contact || null;
 }
 
@@ -51,10 +52,10 @@ export async function createContact(payload) {
   return contact;
 }
 
-// Оновити контакт
-export async function updateContact(contactId, payload, options = {}) {
+// Оновити контакт (одночасно перевіряємо і userId, і _id)
+export async function updateContact(contactId, userId, payload, options = {}) {
   const rawResult = await ContactModel.findOneAndUpdate(
-    { _id: contactId },
+    { _id: contactId, userId },
     payload,
     { new: true, includeResultMetadata: true, ...options }
   );
@@ -67,8 +68,8 @@ export async function updateContact(contactId, payload, options = {}) {
   };
 }
 
-// Видалити контакт
-export async function deleteContact(contactId) {
-  const contact = await ContactModel.findOneAndDelete({ _id: contactId });
+// Видалити контакт (одночасно перевіряємо і userId, і _id)
+export async function deleteContact(contactId, userId) {
+  const contact = await ContactModel.findOneAndDelete({ _id: contactId, userId });
   return contact || null;
 }

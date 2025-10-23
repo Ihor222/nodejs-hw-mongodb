@@ -50,32 +50,34 @@ const setupSession = (res, session) => {
 
 // Оновлення сесії
 export async function refreshUserSessionController(req, res) {
-    const session = await refreshUserSession({
-        sessionId: req.cookies.sessionId, // беремо _id сесії з cookies
-        refreshToken: req.cookies.refreshToken,
-    });
+  const session = await refreshUserSession({
+    sessionId: req.session._id, // ✅ беремо з authenticate
+    refreshToken: req.session.refreshToken,
+  });
 
-    setupSession(res, session);
+  res.cookie("refreshToken", session.refreshToken, {
+    httpOnly: true,
+    expires: new Date(Date.now() + THIRTY_DAY),
+  });
+  res.cookie("sessionId", session._id.toString(), {
+    httpOnly: true,
+    expires: new Date(Date.now() + THIRTY_DAY),
+  });
 
-    res.json({
-        status: 200,
-        message: "Successfully refreshed a session!",
-        data: {
-            accessToken: session.accessToken,
-        },
-    });
+  res.json({
+    status: 200,
+    message: "Successfully refreshed a session!",
+    data: {
+      accessToken: session.accessToken,
+    },
+  });
 }
 
 // Вихід користувача
 export async function logoutUserController(req, res) {
-    const sessionId = req.cookies.sessionId;
-
-    if (sessionId) {
-        await logoutUser(sessionId); // видаляємо сесію по _id
-    }
-
-    res.clearCookie("sessionId");
-    res.clearCookie("refreshToken");
-
-    res.status(204).send();
+  await logoutUser(req.session._id); // беремо з authenticate
+  res.clearCookie("sessionId");
+  res.clearCookie("refreshToken");
+  res.status(204).send();
 }
+
