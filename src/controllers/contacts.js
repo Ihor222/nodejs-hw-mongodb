@@ -60,21 +60,21 @@ export async function createContactController(req, res) {
 
 // PATCH /contacts/:contactId
 export async function patchContactController(req, res, next) {
-    const { contactId } = req.params;
+  const { contactId } = req.params;
+  const result = await updateContact(contactId, req.user._id, req.body); 
 
-    const result = await updateContact(contactId, req.body, req.user._id); // оновлюємо тільки контакт користувача
+  if (!result) {
+    next(createHttpError(404, "Contact not found"));
+    return;
+  }
 
-    if (!result) {
-        next(createHttpError(404, "Contact not found"));
-        return;
-    }
-
-    res.json({
-        status: 200,
-        message: "Successfully patched a contact",
-        data: result,
-    });
+  res.json({
+    status: 200,
+    message: "Successfully patched a contact",
+    data: result,
+  });
 }
+
 
 // DELETE /contacts/:contactId
 export async function deleteContactController(req, res, next) {
