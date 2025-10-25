@@ -77,29 +77,43 @@ export async function loginUserController(req, res, next) {
 
 export async function refreshUserSessionController(req, res, next) {
   try {
-    const { refreshToken } = req.cookies; //  беремо з cookies
-    if (!refreshToken) throw createHttpError(401, "Refresh token missing");
+    const { refreshToken } = req.cookies;
+    
+    if (!refreshToken) {
+      throw createHttpError(401, "Refresh token missing in cookies");
+    }
 
     let decoded;
     try {
       decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-    } catch {
+    } catch (error) {
       throw createHttpError(401, "Invalid or expired refresh token");
     }
 
     const user = await UserModel.findById(decoded.id);
-    if (!user || user.refreshToken !== refreshToken) {
+    if (!user) {
+      throw createHttpError(401, "User not found");
+    }
+
+    if (user.refreshToken !== refreshToken) {
       throw createHttpError(401, "User not authorized");
     }
 
-    const newAccessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const newAccessToken = jwt.sign(
+      { id: user._id }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: "1h" }
+    );
+
     user.token = newAccessToken;
     await user.save();
 
     res.json({
       status: 200,
       message: "Successfully refreshed a session!",
-      data: { accessToken: newAccessToken },
+      data: { 
+        accessToken: newAccessToken 
+      },
     });
   } catch (error) {
     next(error);
@@ -108,11 +122,16 @@ export async function refreshUserSessionController(req, res, next) {
 
 export async function logoutUserController(req, res, next) {
   try {
-    const { refreshToken } = req.cookies; // беремо з cookies
-    if (!refreshToken) throw createHttpError(401, "Refresh token missing");
+    const { refreshToken } = req.cookies;
+    
+    if (!refreshToken) {
+      throw createHttpError(401, "Refresh token missing in cookies");
+    }
 
     const user = await UserModel.findOne({ refreshToken });
-    if (!user) throw createHttpError(401, "User not found");
+    if (!user) {
+      throw createHttpError(401, "User not found");
+    }
 
     user.token = null;
     user.refreshToken = null;
@@ -120,6 +139,7 @@ export async function logoutUserController(req, res, next) {
 
     res.clearCookie("refreshToken");
     res.clearCookie("sessionId"); 
+
     res.status(204).send();
   } catch (error) {
     next(error);

@@ -9,7 +9,6 @@ import {
   logoutUserController,
 } from "../controllers/auth.js";
 import { registerUserSchema, loginUserSchema } from "../validation/auth.js";
-import { authenticate } from "../middlewares/authenticate.js"; // ✅ додай це
 
 const router = Router();
 
@@ -19,10 +18,10 @@ router.post("/register", validateBody(registerUserSchema), ctrlWrapper(registerU
 // POST /auth/login
 router.post("/login", validateBody(loginUserSchema), ctrlWrapper(loginUserController));
 
-// POST /auth/refresh (доступ тільки з дійсним токеном)
-router.post("/refresh", authenticate, ctrlWrapper(refreshUserSessionController)); // ✅ додали authenticate
+// POST /auth/refresh (без authenticate middleware!)
+router.post("/refresh", ctrlWrapper(refreshUserSessionController));
 
-// POST /auth/logout (доступ тільки для залогінених)
-router.post("/logout", authenticate, ctrlWrapper(logoutUserController)); // ✅ додали authenticate
+// POST /auth/logout (без authenticate middleware!)
+router.post("/logout", ctrlWrapper(logoutUserController));
 
 export default router;
