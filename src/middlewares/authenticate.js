@@ -1,33 +1,35 @@
 // src/middlewares/authenticate.js
 import createHttpError from "http-errors";
-import { SessionModel } from "../db/models/session.js";
+import jwt from "jsonwebtoken";
 import { UserModel } from "../db/models/user.js";
 
 export async function authenticate(req, res, next) {
   try {
-    const { sessionId, refreshToken } = req.cookies;
+    const authHeader = req.get("Authorization");
 
-    if (!sessionId || !refreshToken) {
-      throw createHttpError(401, "No cookies provided");
+    if (!authHeader) {
+      throw createHttpError(401, "Authorization header missing");
     }
 
-    const session = await SessionModel.findOne({
-      _id: sessionId,
-      refreshToken,
-    });
+    const [type, token] = authHeader.split(" ");
 
-    if (!session) {
-      throw createHttpError(401, "Session not found");
+    if (type !== "Bearer" || !token) {
+      throw createHttpError(401, "Invalid Authorization header format");
     }
 
-    const user = await UserModel.findById(session.userId);
-    if (!user) {
-      throw createHttpError(401, "User not found");
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+      throw createHttpError(401, "Invalid or expired token");
+    }
+
+    const user = await UserModel.findById(decoded.id);
+    if (!user || user.token !== token) {
+      throw createHttpError(401, "User not authorized");
     }
 
     req.user = user;
-    req.session = session;
-
     next();
   } catch (error) {
     next(error);

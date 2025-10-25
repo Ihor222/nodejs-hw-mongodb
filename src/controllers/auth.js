@@ -1,83 +1,114 @@
-import { THIRTY_DAY } from "../constants/index.js";
-import { registerUser, loginUser, logoutUser, refreshUserSession } from "../services/auth.js";
+import jwt from "jsonwebtoken";
+import createHttpError from "http-errors";
+import { UserModel } from "../db/models/user.js";
+import bcrypt from "bcrypt";
 
-// Реєстрація користувача
-export async function registerUserController(req, res) {
-    const user = await registerUser(req.body);
+
+export async function registerUserController(req, res, next) {
+  try {
+    const { email, password } = req.body;
+
+    const existingUser = await UserModel.findOne({ email });
+    if (existingUser) {
+      throw createHttpError(409, "Email already in use");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await UserModel.create({ email, password: hashedPassword });
 
     res.status(201).json({
-        status: 201,
-        message: "Successfully registered a user!",
-        data: user,
+      status: 201,
+      message: "Successfully registered a user!",
+      data: { email: newUser.email },
     });
+  } catch (error) {
+    next(error);
+  }
 }
 
-// Логін користувача
-export async function loginUserController(req, res) {
-    const session = await loginUser(req.body);
 
-    res.cookie("refreshToken", session.refreshToken, {
-        httpOnly: true,
-        expires: new Date(Date.now() + THIRTY_DAY),
-    });
+export async function loginUserController(req, res, next) {
+  try {
+    const { email, password } = req.body;
 
-    // Використовуємо _id сесії замість sessionId
-    res.cookie("sessionId", session._id.toString(), {
-        httpOnly: true,
-        expires: new Date(Date.now() + THIRTY_DAY),
-    });
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      throw createHttpError(401, "Email or password is wrong");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw createHttpError(401, "Email or password is wrong");
+    }
+
+    // Створюємо токени
+    const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: "30d" });
+
+    user.token = accessToken;
+    user.refreshToken = refreshToken;
+    await user.save();
 
     res.json({
-        status: 200,
-        message: "Successfully logged in a user!",
-        data: {
-            accessToken: session.accessToken,
-        },
+      status: 200,
+      message: "Successfully logged in a user!",
+      data: { accessToken, refreshToken },
     });
+  } catch (error) {
+    next(error);
+  }
 }
 
-// Допоміжна функція для встановлення cookies
-const setupSession = (res, session) => {
-    res.cookie("refreshToken", session.refreshToken, {
-        httpOnly: true,
-        expires: new Date(Date.now() + THIRTY_DAY),
+
+export async function refreshUserSessionController(req, res, next) {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      throw createHttpError(401, "Refresh token missing");
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    } catch {
+      throw createHttpError(401, "Invalid or expired refresh token");
+    }
+
+    const user = await UserModel.findById(decoded.id);
+    if (!user || user.refreshToken !== refreshToken) {
+      throw createHttpError(401, "User not authorized");
+    }
+
+    const newAccessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+    user.token = newAccessToken;
+    await user.save();
+
+    res.json({
+      status: 200,
+      message: "Successfully refreshed a session!",
+      data: { accessToken: newAccessToken },
     });
-    res.cookie("sessionId", session._id.toString(), {
-        httpOnly: true,
-        expires: new Date(Date.now() + THIRTY_DAY),
-    });
+  } catch (error) {
+    next(error);
+  }
 }
 
-// Оновлення сесії
-export async function refreshUserSessionController(req, res) {
-  const session = await refreshUserSession({
-    sessionId: req.session._id, // ✅ беремо з authenticate
-    refreshToken: req.session.refreshToken,
-  });
 
-  res.cookie("refreshToken", session.refreshToken, {
-    httpOnly: true,
-    expires: new Date(Date.now() + THIRTY_DAY),
-  });
-  res.cookie("sessionId", session._id.toString(), {
-    httpOnly: true,
-    expires: new Date(Date.now() + THIRTY_DAY),
-  });
+export async function logoutUserController(req, res, next) {
+  try {
+    const user = req.user;
+    if (!user) {
+      throw createHttpError(401, "Not authorized");
+    }
 
-  res.json({
-    status: 200,
-    message: "Successfully refreshed a session!",
-    data: {
-      accessToken: session.accessToken,
-    },
-  });
+    user.token = null;
+    user.refreshToken = null;
+    await user.save();
+
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
 }
-
-// Вихід користувача
-export async function logoutUserController(req, res) {
-  await logoutUser(req.session._id); // беремо з authenticate
-  res.clearCookie("sessionId");
-  res.clearCookie("refreshToken");
-  res.status(204).send();
-}
-
