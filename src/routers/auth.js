@@ -1,4 +1,3 @@
-// src/routers/auth.js
 import { Router } from "express";
 import ctrlWrapper from "../utils/ctrlWrapper.js";
 import { validateBody } from "../middlewares/validateBody.js";
@@ -12,16 +11,18 @@ import { registerUserSchema, loginUserSchema } from "../validation/auth.js";
 
 const router = Router();
 
-// POST /auth/register
+// Реєстрація користувача
 router.post("/register", validateBody(registerUserSchema), ctrlWrapper(registerUserController));
 
-// POST /auth/login
+// Логін користувача
 router.post("/login", validateBody(loginUserSchema), ctrlWrapper(loginUserController));
 
-// POST /auth/refresh (без authenticate middleware!)
+// Оновлення сесії (refresh)
+// refreshToken береться з cookies → authenticate тут НЕ потрібен
 router.post("/refresh", ctrlWrapper(refreshUserSessionController));
 
-// POST /auth/logout (без authenticate middleware!)
+// Вихід з системи (logout)
+// також працює через cookies
 router.post("/logout", ctrlWrapper(logoutUserController));
 
 export default router;
