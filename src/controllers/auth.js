@@ -62,11 +62,8 @@ export async function loginUserController(req, res, next) {
 
 export async function refreshUserSessionController(req, res, next) {
   try {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      throw createHttpError(401, "Refresh token missing");
-    }
+    const { refreshToken } = req.cookies; //  беремо з cookies
+    if (!refreshToken) throw createHttpError(401, "Refresh token missing");
 
     let decoded;
     try {
@@ -81,7 +78,6 @@ export async function refreshUserSessionController(req, res, next) {
     }
 
     const newAccessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-
     user.token = newAccessToken;
     await user.save();
 
@@ -95,18 +91,20 @@ export async function refreshUserSessionController(req, res, next) {
   }
 }
 
-
 export async function logoutUserController(req, res, next) {
   try {
-    const user = req.user;
-    if (!user) {
-      throw createHttpError(401, "Not authorized");
-    }
+    const { refreshToken } = req.cookies; // беремо з cookies
+    if (!refreshToken) throw createHttpError(401, "Refresh token missing");
+
+    const user = await UserModel.findOne({ refreshToken });
+    if (!user) throw createHttpError(401, "User not found");
 
     user.token = null;
     user.refreshToken = null;
     await user.save();
 
+    res.clearCookie("refreshToken");
+    res.clearCookie("sessionId"); 
     res.status(204).send();
   } catch (error) {
     next(error);
