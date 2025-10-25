@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser"; // ✅ ДОДАНО
+import cookieParser from "cookie-parser"; 
 import pino from "pino";
 import pinoHttp from "pino-http";
 import getEnvVar from "./utils/getEnvVar.js";

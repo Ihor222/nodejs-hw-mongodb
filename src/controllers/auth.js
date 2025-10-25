@@ -6,7 +6,11 @@ import bcrypt from "bcrypt";
 
 export async function registerUserController(req, res, next) {
   try {
-    const { email, password } = req.body;
+    const { email, password, name } = req.body;
+
+    if (!email || !password || !name) {
+      throw createHttpError(400, "Missing required fields: email, password, name");
+    }
 
     const existingUser = await UserModel.findOne({ email });
     if (existingUser) {
@@ -14,17 +18,21 @@ export async function registerUserController(req, res, next) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await UserModel.create({ email, password: hashedPassword });
+    const newUser = await UserModel.create({ email, password: hashedPassword, name });
 
     res.status(201).json({
       status: 201,
       message: "Successfully registered a user!",
-      data: { email: newUser.email },
+      data: {
+        email: newUser.email,
+        name: newUser.name,
+      },
     });
   } catch (error) {
     next(error);
   }
 }
+
 
 
 export async function loginUserController(req, res, next) {
@@ -49,15 +57,22 @@ export async function loginUserController(req, res, next) {
     user.refreshToken = refreshToken;
     await user.save();
 
+    // Встановлюємо refreshToken у httpOnly cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 днів
+    });
+
     res.json({
       status: 200,
       message: "Successfully logged in a user!",
-      data: { accessToken, refreshToken },
+      data: { accessToken }, // refreshToken в JSON не відправляємо
     });
   } catch (error) {
     next(error);
   }
 }
+
 
 
 export async function refreshUserSessionController(req, res, next) {
