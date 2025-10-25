@@ -10,15 +10,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Antonio-Bilyi/nodejs-hw-mongodb.git"
+    "url": "git+https://github.com/Ihor222/nodejs-hw-mongodb.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Antonio-Bilyi/nodejs-hw-mongodb/issues"
+    "url": "https://github.com/Ihor222/nodejs-hw-mongodb/issues"
   },
-  "homepage": "https://github.com/Antonio-Bilyi/nodejs-hw-mongodb#readme",
+  "homepage": "https://github.com/Ihor222/nodejs-hw-mongodb#readme",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
