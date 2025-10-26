@@ -11,7 +11,7 @@
   },
   "servers": [
     {
-      "url": "https://nodejs-hw7-swagger-ouxs.onrender.com"
+      "url": "https://nodejs-hw-mongodb-60-tfcm.onrender.com"
     }
   ],
   "tags": [
@@ -560,21 +560,71 @@
       "contact": {
         "type": "object",
         "required": [
+          "_id",
           "name",
-          "email"
+          "phoneNumber",
+          "contactType",
+          "userId",
+          "createdAt",
+          "updatedAt"
         ],
         "properties": {
+          "_id": {
+            "type": "string",
+            "description": "contact id",
+            "example": "65ca67e7ae7f10c88b598384"
+          },
           "name": {
             "type": "string",
-            "example": "John Doe"
+            "description": "Contact name",
+            "example": "John Dou"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Contact phone number",
+            "example": 380924315679
           },
           "email": {
             "type": "string",
-            "example": "john@example.com"
+            "description": "contact email",
+            "example": "example@gmail.com"
           },
-          "phone": {
+          "isFavourite": {
+            "type": "boolean",
+            "description": "Favourite contact",
+            "default": false,
+            "example": true
+          },
+          "contactType": {
             "type": "string",
-            "example": "+380501234567"
+            "enum": [
+              "work",
+              "home",
+              "personal"
+            ],
+            "example": "work"
+          },
+          "photo": {
+            "type": "string",
+            "format": "binary",
+            "description": "Contact photo",
+            "default": null,
+            "example": "https://res.cloudinary.com/ds5fvs6c4/image/upload/v1760626225/c0l9gqpkajzbsmfiaqpw.png"
+          },
+          "userId": {
+            "type": "string",
+            "description": "contact user id",
+            "example": "68e4ef325a8a80b61937bfc8"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-10-07T10:45:06.918+00:00"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-10-07T10:45:06.918+00:00"
           }
         }
       }

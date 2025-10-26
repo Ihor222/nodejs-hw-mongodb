@@ -114,7 +114,7 @@ export async function deleteContactController(req, res, next) {
       throw createHttpError(404, "Contact not found");
     }
 
-    res.status(204).send();
+    res.status(204).end();
   } catch (err) {
     next(err);
   }

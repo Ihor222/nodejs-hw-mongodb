@@ -12,7 +12,7 @@ tags:
   - name: Auth
     description: Authorize operation
 servers:
-  - url: https://nodejs-hw7-swagger-ouxs.onrender.com
+  - url: https://nodejs-hw-mongodb-60-tfcm.onrender.com
 paths:
   /contacts:
     get:
